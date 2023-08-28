@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Export environment variables from .env file
+# Ignore comments and export string values with multiple words
+# Solution taken from: https://unix.stackexchange.com/a/680870
+
+eval $(egrep "^[^#;]" ".env" | xargs -d'\n' -n1 | sed 's/^/export /')
+
+# eval $(egrep "^[^#;]" "new-profile-env" | xargs -d'\n' -n1 | sed 's/^/export /')

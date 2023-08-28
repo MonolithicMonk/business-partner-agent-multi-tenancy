@@ -1,0 +1,308 @@
+#!/bin/bash
+export MSYS_NO_PATHCONV=1
+set -e
+
+
+SCRIPT_HOME="$(cd "$(dirname "$0")" && pwd)"
+
+# =================================================================================================================
+# Usage:
+# -----------------------------------------------------------------------------------------------------------------
+usage() {
+  cat <<-EOF
+    
+      Usage: $0 [command] [options]
+    
+      Commands:
+    
+      build - Build the docker images for the project.
+              You need to do this first, since the builds require
+              a combination of Docker and S2I builds.
+    
+              You can build individual components as shown below, components that have
+              dependencies will have these dependencies built too.
+    
+              Examples:
+               - Build the API only.
+    
+                $0 build api
+         
+              By default all containers that components comprise of, will be rebuilt.
+    
+                $0 build
+
+              Containers:
+                - solr
+                - db
+                - schema-spy
+                - api
+                - agent
+    
+      up -  Creates the application containers from the built images
+            and starts the services based on the docker compose -f new.yml.yml file.
+
+            You can pass in a list of containers to start.  
+            By default all containers will be started.
+
+            You can include a '--wait' parameter which will wait until the ledger is active
+            When using the '--logs' option, use ctrl-c to exit logging. Use "down" or "stop" to stop the run.
+
+            Examples:
+            $0 start
+            $0 start --logs
+            $0 start --logs --wait
+            $0 start vcr-solr
+            $0 start vcr-api
+
+      start - Same as up 
+    
+      scale/upscale - Same as start/up however starts multiple instances of the aca-py and api containers.
+
+            Note that to run "scale" you need to update the docker compose -f new.yml.yml file to REMOVE exposed ports
+            from the vcr-api and vcr-agent containers.
+
+            You also need to FIRST run `./manage start` to initialize the agent and wallet, then run
+            `./manage stop` and then `./manage scale`.
+
+      restart - Re-starts the application containers, 
+                useful when updating one of the container images during development.
+
+            You can pass in a list of containers to be restarted.  
+            By default all containers will be restarted.
+
+            Examples:
+            $0 start
+            $0 start vcr-solr
+            $0 start vcr-api
+
+      logs - Display the logs from the docker compose run (ctrl-c to exit).
+
+      stop - Stops the services.  This is a non-destructive process.  The volumes and containers
+             are not deleted so they will be reused the next time you run start.
+    
+      down - Brings down the services and removes the volumes (storage) and containers.
+      rm - Same as down
+    
+      registerDids - Register the DIDs for the issuer services.
+                     This is intended for development use.
+    
+                     Examples:
+                     $0 registerDids seed=the_org_book_0000000000000000000
+                     - This will register the DID using the provided seed with the locally running von-network instance.
+
+      test-api - Runs the suite of vcr-api unit tests in a Docker container
+
+EOF
+  exit 1
+}
+# -----------------------------------------------------------------------------------------------------------------
+# Default Settings:
+# -----------------------------------------------------------------------------------------------------------------
+DEFAULT_CONTAINERS=""
+# "wallet-db vcr-db vcr-solr vcr-api vcr-agent schema-spy rabbitmq vcr-worker echo-app"
+# -----------------------------------------------------------------------------------------------------------------
+# Functions:
+# -----------------------------------------------------------------------------------------------------------------
+function echoRed (){
+  _msg=${1}
+  _red='\e[31m'
+  _nc='\e[0m' # No Color
+  echo -e "${_red}${_msg}${_nc}" >&2
+}
+
+function echoYellow (){
+  _msg=${1}
+  _yellow='\e[33m'
+  _nc='\e[0m' # No Color
+  echo -e "${_yellow}${_msg}${_nc}" >&2
+}
+
+function echoError (){
+  _msg=${1}
+  _red='\033[0;31m'
+  _nc='\033[0m' # No Color
+  echo -e "${_red}${_msg}${_nc}" >&2
+}
+
+configureEnvironment() {
+  . exports
+
+  # . /dev/stdin <<<"$(cat <(curl -s --raw https://raw.githubusercontent.com/bcgov/DITP-DevOps/main/code/snippets/getDockerHost))"
+  # export DOCKERHOST=$(getDockerHost)
+  export DOCKERHOST=$(docker network inspect bridge -f '{{range .IPAM.Config}}{{.Gateway}}{{end}}')
+  for arg in "$@"; do
+    # Remove recognized arguments from the list after processing.
+    shift
+
+    case "$arg" in
+      *=*)
+        # echo "Exporting ..."
+        export "${arg}"
+        ;;
+      --logs)
+        TAIL_LOGS=1
+        ;;
+      --wait)
+        WAIT_FOR_VCR_API=1
+        ;;
+      *)
+        set -- "$@" "$arg"
+        ;;
+    esac
+  done
+
+  export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME}"
+  export composeOptions="-f db-compose.yml"
+}
+
+function logs() {
+  (
+    local OPTIND
+    local unset _force
+    local unset no_tail
+    while getopts ":f-:" FLAG; do
+      case $FLAG in
+        f ) local _force=1 ;;
+        - ) 
+            case ${OPTARG} in
+                "no-tail"*) no_tail=1
+              ;;
+            esac
+      esac
+    done
+    shift $((OPTIND-1))
+
+    log_args=()
+    (( no_tail != 1 )) && log_args+=( '-f' )
+    if [ ! -z "${TAIL_LOGS}" ] || [ ! -z "${_force}" ]; then
+      docker compose ${composeOptions} \
+         logs \
+         "${log_args[@]}" "$@"
+    fi
+  )
+}
+
+getInputParams() {
+  ARGS=""
+
+  for arg in $@; do
+    case "$arg" in
+    *=*)
+      # Skip it
+      ;;
+    --logs)
+      # Skip it
+      ;;
+    --wait)
+      # Skip it
+      ;;
+    *)
+      ARGS+=" $arg"
+      ;;
+    esac
+  done
+
+  echo ${ARGS}
+}
+
+getStartupParams() {
+  CONTAINERS=""
+  ARGS=""
+
+  for arg in $@; do
+    case "$arg" in
+    *=*)
+      # Skip it
+      ;;
+    --logs)
+      # Skip it
+      ;;
+    --wait)
+      # Skip it
+      ;;
+    -*)
+      ARGS+=" $arg"
+      ;;
+    *)
+      CONTAINERS+=" $arg"
+      ;;
+    esac
+  done
+
+  if [ -z "$CONTAINERS" ]; then
+    CONTAINERS="$DEFAULT_CONTAINERS"
+  fi
+
+  echo ${ARGS} ${CONTAINERS}
+}
+
+deleteVolumes() {
+  _projectName=${COMPOSE_PROJECT_NAME:-docker}
+
+  echo "Stopping and removing any running containers ..."
+  docker compose ${composeOptions} down -v
+
+  _pattern="^${_projectName}_\|^docker_"
+  _volumes=$(docker volume ls -q | grep ${_pattern})
+
+  if [ ! -z "${_volumes}" ]; then
+    echo "Removing project volumes ..."
+    echo ${_volumes} | xargs docker volume rm
+  else
+    echo "No project volumes exist."
+  fi
+
+  echo "Removing build cache ..."
+  rm -Rf ../client/.cache
+}
+
+toLower() {
+  echo $(echo ${@} | tr '[:upper:]' '[:lower:]')
+}
+
+
+# =================================================================================================================
+
+pushd ${SCRIPT_HOME} >/dev/null
+COMMAND=$(toLower ${1})
+shift || COMMAND=usage
+
+case "${COMMAND}" in
+  start|up)
+#    ./diode-start
+    # sleep 1
+    _startupParams=$(getStartupParams --force-recreate $@)
+    configureEnvironment "$@"
+    docker compose ${composeOptions} up -d ${_startupParams}
+    logs
+    echo 'Want to see the scrolling container logs? Run "./manage logs"'
+    ;;
+  restart)
+    _startupParams=$(getStartupParams $@)
+    configureEnvironment "$@"
+    docker compose ${composeOptions} stop ${_startupParams}
+    docker compose ${composeOptions} up -d ${_startupParams}
+    ;;
+  logs)
+    configureEnvironment "$@"
+    logs -f "$@"
+    ;;
+  stop)
+    configureEnvironment
+    docker compose ${composeOptions} stop 
+    ;;
+  rm|down)
+    configureEnvironment
+    deleteVolumes
+    ;;
+  shell)
+    _inputParams=$(getInputParams $@)
+    configureEnvironment "$@"
+    docker compose ${composeOptions} run ${BPA_SERVICE_NAME} bash ${_inputParams}
+    ;;
+  *)
+    usage
+    ;;
+esac
+
+popd >/dev/null

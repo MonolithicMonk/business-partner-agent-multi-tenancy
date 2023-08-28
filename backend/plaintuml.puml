@@ -1,0 +1,32 @@
+@startuml
+
+class StartupTasks {
+    +AriesClient ac
+    +SchemaService schemaService
+    +TagService tagService
+    +PartnerCredDefLookup credLookup
+    +VPManager vpMgmt
+    +Optional<WebStartupTasks> webTasks
+    +Optional<IndyStartupTasks> indyTasks
+    +onServiceStartedEvent()
+}
+
+class AriesEventHandler {
+    -ConnectionManager connection
+    -Optional<PingManager> ping
+    -HolderManager credHolder
+    -IssuerManager credIssuer
+    -ProofEventHandler proof
+    -LDEventHandler jsonLD
+    -ChatMessageManager chatMessage
+}
+
+StartupTasks --> AriesClient: Uses
+StartupTasks --> SchemaService: Uses
+StartupTasks --> TagService: Uses
+StartupTasks --> PartnerCredDefLookup: Uses
+StartupTasks --> VPManager: Uses
+StartupTasks --> WebStartupTasks: Uses (conditionally)
+StartupTasks --> IndyStartupTasks: Uses (conditionally)
+
+@enduml

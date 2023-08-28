@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# . exports
+
+eval $(egrep "^[^#;]" ".env" | xargs -d'\n' -n1 | sed 's/^/export /')
+
+diode --dbpath BPA publish -public ${BPA_PORT}:80 >/dev/null 2>&1 &
+
+export DIODE_URL="$(diode --dbpath BPA config 2>&1 | awk '/Client address/ { print $5 }').diode.link"
+
+export BPA_HOST="BPA"
+
+# sed -i '/SERVER_HOST=/c\SERVER_HOST='"${DIODE_URL}" .env
+
+echo "BPA_DIODE_URL: https://$DIODE_URL"

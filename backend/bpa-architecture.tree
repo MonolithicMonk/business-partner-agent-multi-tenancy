@@ -1,0 +1,450 @@
+The next three templates contain three parts of a code base for an applicatoin
+
+The following project is based on micronaut 3.0+.  
+It has micronaut security as it authencation / authorization mechanim.  
+It uses jwt token, auth0, and a cookie for authentication and authorization.  
+It also uses postgresq jbdc driver, flywaydb for migrations, and aries cloud agent python for application hyperledger agent.
+
+Based on the following tree of the base directory for the application code, create a high level systems assessment of the pluming of this application:
+{{app_dir_one_of_three}}=".
+├── bpa-architecture.tree
+├── business-partner-agent
+│   ├── allowed-missing-licenses.xml
+│   ├── licenses.xml
+│   ├── pom.xml
+│   └── src
+│       └── main
+│           ├── java
+│           │   └── org
+│           │       └── hyperledger
+│           │           └── bpa
+│           │               ├── api
+│           │               │   ├── ApiConstants.java
+│           │               │   ├── aries
+│           │               │   │   ├── AriesCredential.java
+│           │               │   │   ├── AriesProofExchange.java
+│           │               │   │   ├── ProfileVC.java
+│           │               │   │   └── SchemaAPI.java
+│           │               │   ├── CredentialType.java
+│           │               │   ├── DocumentMapper.java
+│           │               │   ├── exception
+│           │               │   │   ├── DataPersistenceException.java
+│           │               │   │   ├── EntityNotFoundException.java
+│           │               │   │   ├── InvitationException.java
+│           │               │   │   ├── IssuerException.java
+│           │               │   │   ├── NetworkException.java
+│           │               │   │   ├── PartnerException.java
+│           │               │   │   ├── PresentationConstructionException.java
+│           │               │   │   ├── ProofTemplateException.java
+│           │               │   │   ├── SchemaException.java
+│           │               │   │   └── WrongApiUsageException.java
+│           │               │   ├── MyDocumentAPI.java
+│           │               │   ├── notification
+│           │               │   │   ├── ActivityNotificationEvent.java
+│           │               │   │   ├── CredentialAcceptedEvent.java
+│           │               │   │   ├── CredentialAddedEvent.java
+│           │               │   │   ├── CredentialIssuedEvent.java
+│           │               │   │   ├── CredentialOfferedEvent.java
+│           │               │   │   ├── CredentialProblemEvent.java
+│           │               │   │   ├── CredentialProposalEvent.java
+│           │               │   │   ├── PartnerAcceptedEvent.java
+│           │               │   │   ├── PartnerAddedEvent.java
+│           │               │   │   ├── PartnerRemovedEvent.java
+│           │               │   │   ├── PartnerRequestCompletedEvent.java
+│           │               │   │   ├── PartnerRequestReceivedEvent.java
+│           │               │   │   ├── PresentationRequestCompletedEvent.java
+│           │               │   │   ├── PresentationRequestDeclinedEvent.java
+│           │               │   │   ├── PresentationRequestDeletedEvent.java
+│           │               │   │   ├── PresentationRequestReceivedEvent.java
+│           │               │   │   ├── PresentationRequestSentEvent.java
+│           │               │   │   ├── TaskAddedEvent.java
+│           │               │   │   └── TaskCompletedEvent.java
+│           │               │   ├── PartnerAPI.java
+│           │               │   └── TagAPI.java
+│           │               ├── Application.java
+│           │               ├── client
+│           │               │   ├── AcaPyReadinessCheck.java
+│           │               │   ├── api
+│           │               │   │   └── LedgerQueryResult.java
+│           │               │   ├── CachingAriesClient.java
+│           │               │   ├── DidDocClient.java
+│           │               │   └── LedgerExplorerClient.java
+│           │               ├── config
+│           │               │   ├── AcaPyConfig.java
+│           │               │   ├── ActivityLogConfig.java
+│           │               │   ├── AriesClientFactory.java
+│           │               │   ├── BPAMessageSource.java
+│           │               │   ├── ClockFactory.java
+│           │               │   ├── LocalAuthProvider.java
+│           │               │   ├── PasswordEncoderFactory.java
+│           │               │   ├── runtime
+│           │               │   │   ├── RequiresIndy.java
+│           │               │   │   ├── RequiresLedgerExplorer.java
+│           │               │   │   └── RequiresWeb.java
+│           │               │   ├── RuntimeConfig.java
+│           │               │   ├── SchemaConfig.java
+│           │               │   ├── security
+│           │               │   │   ├── FrontendSecurityHeaderFilter.java
+│           │               │   │   └── oauth2
+│           │               │   │       ├── client
+│           │               │   │       │   ├── RequiresKeycloak.java
+│           │               │   │       │   └── RequiresMissingKeycloak.java
+│           │               │   │       └── endpoint
+│           │               │   │           ├── authorization
+│           │               │   │           │   └── request
+│           │               │   │           │       └── KeycloakAuthorizationRedirectHandler.java
+│           │               │   │           ├── endsession
+│           │               │   │           │   └── request
+│           │               │   │           │       └── KeycloakEndSessionEndpoint.java
+│           │               │   │           └── token
+│           │               │   │               └── response
+│           │               │   │                   └── KeycloakUserDetailsMapper.java
+│           │               │   └── TagConfig.java
+│           │               ├── controller
+│           │               │   ├── ActivitiesController.java
+│           │               │   ├── AdminController.java
+│           │               │   ├── api
+│           │               │   │   ├── activity
+│           │               │   │   │   ├── ActivityItem.java
+│           │               │   │   │   ├── ActivityRole.java
+│           │               │   │   │   ├── ActivitySearchParameters.java
+│           │               │   │   │   ├── ActivityState.java
+│           │               │   │   │   └── ActivityType.java
+│           │               │   │   ├── admin
+│           │               │   │   │   ├── AddSchemaRequest.java
+│           │               │   │   │   ├── AddTagRequest.java
+│           │               │   │   │   ├── AddTrustedIssuerRequest.java
+│           │               │   │   │   ├── TAADigestRequest.java
+│           │               │   │   │   ├── TrustedIssuer.java
+│           │               │   │   │   ├── UpdateSchemaRequest.java
+│           │               │   │   │   ├── UpdateTagRequest.java
+│           │               │   │   │   └── UpdateTrustedIssuerRequest.java
+│           │               │   │   ├── exception
+│           │               │   │   │   ├── DataPersistenceExceptionHandler.java
+│           │               │   │   │   ├── EntityNotFoundExceptionHandler.java
+│           │               │   │   │   ├── InvitationExceptionHandler.java
+│           │               │   │   │   ├── IssuerExceptionHandler.java
+│           │               │   │   │   ├── NetworkExceptionHandler.java
+│           │               │   │   │   ├── PartnerExceptionHandler.java
+│           │               │   │   │   ├── SchemaExceptionHandler.java
+│           │               │   │   │   └── WrongApiUsageExceptionHandler.java
+│           │               │   │   ├── ExchangeVersionTranslator.java
+│           │               │   │   ├── invitation
+│           │               │   │   │   ├── AcceptInvitationRequest.java
+│           │               │   │   │   ├── APICreateInvitationResponse.java
+│           │               │   │   │   ├── CheckInvitationRequest.java
+│           │               │   │   │   └── CheckInvitationResponse.java
+│           │               │   │   ├── issuer
+│           │               │   │   │   ├── CreateCredDefRequest.java
+│           │               │   │   │   ├── CreateSchemaRequest.java
+│           │               │   │   │   ├── CredDef.java
+│           │               │   │   │   ├── CredentialOfferRequest.java
+│           │               │   │   │   ├── CredEx.java
+│           │               │   │   │   ├── DeclineExchangeRequest.java
+│           │               │   │   │   ├── IssueCredentialRequest.java
+│           │               │   │   │   └── IssueOOBCredentialRequest.java
+│           │               │   │   ├── messaging
+│           │               │   │   │   ├── AdHocMessageRequest.java
+│           │               │   │   │   ├── MessageTemplateCmd.java
+│           │               │   │   │   ├── MessageTriggerConfigCmd.java
+│           │               │   │   │   └── MessageUserInfoCmd.java
+│           │               │   │   ├── PageSerializer.java
+│           │               │   │   ├── PaginationCommand.java
+"
+
+
+
+
+
+{{app_dir_two_of_three}}=".
+│           │               │   │   ├── partner
+│           │               │   │   │   ├── AddPartnerRequest.java
+│           │               │   │   │   ├── CreatePartnerInvitationRequest.java
+│           │               │   │   │   ├── PartnerCredentialType.java
+│           │               │   │   │   ├── PartnerMessage.java
+│           │               │   │   │   ├── RequestCredentialRequest.java
+│           │               │   │   │   ├── RequestProofRequest.java
+│           │               │   │   │   ├── SendMessageRequest.java
+│           │               │   │   │   ├── SendProofRequest.java
+│           │               │   │   │   ├── UpdatePartnerDidRequest.java
+│           │               │   │   │   └── UpdatePartnerRequest.java
+│           │               │   │   ├── proof
+│           │               │   │   │   ├── ApproveProofRequest.java
+│           │               │   │   │   ├── PresentationRequestCredentialsIndy.java
+│           │               │   │   │   ├── PresentationRequestVersion.java
+│           │               │   │   │   └── RequestOOBPresentationRequest.java
+│           │               │   │   ├── prooftemplates
+│           │               │   │   │   ├── AttributeGroup.java
+│           │               │   │   │   ├── Attribute.java
+│           │               │   │   │   ├── ProofTemplate.java
+│           │               │   │   │   ├── SchemaRestrictions.java
+│           │               │   │   │   └── ValueCondition.java
+│           │               │   │   ├── stats
+│           │               │   │   │   ├── BPAStats.java
+│           │               │   │   │   └── DashboardCounts.java
+│           │               │   │   ├── wallet
+│           │               │   │   │   ├── WalletCredentialRequest.java
+│           │               │   │   │   └── WalletDocumentRequest.java
+│           │               │   │   └── WebSocketMessageBody.java
+│           │               │   ├── AppController.java
+│           │               │   ├── InvitationController.java
+│           │               │   ├── IssuerController.java
+│           │               │   ├── MessagingController.java
+│           │               │   ├── PartnerController.java
+│           │               │   ├── ProofExchangeController.java
+│           │               │   ├── ProofTemplateController.java
+│           │               │   ├── PublicProfileController.java
+│           │               │   ├── StatsController.java
+│           │               │   ├── UserController.java
+│           │               │   ├── WalletController.java
+│           │               │   ├── WebhookController.java
+│           │               │   └── WebsocketController.java
+│           │               ├── impl
+│           │               │   ├── activity
+│           │               │   │   ├── DidResolver.java
+│           │               │   │   ├── DocumentValidator.java
+│           │               │   │   ├── LabelStrategy.java
+│           │               │   │   ├── PartnerCredDefLookup.java
+│           │               │   │   └── PartnerLookup.java
+│           │               │   ├── ActivityManager.java
+│           │               │   ├── aries
+│           │               │   │   ├── AriesEventHandler.java
+│           │               │   │   ├── chat
+│           │               │   │   │   ├── ChatMessageManager.java
+│           │               │   │   │   └── ChatMessageService.java
+│           │               │   │   ├── connection
+│           │               │   │   │   ├── AcyPyConnectionCleanup.java
+│           │               │   │   │   ├── ConnectionManager.java
+│           │               │   │   │   ├── InvitationParser.java
+│           │               │   │   │   └── PingManager.java
+│           │               │   │   ├── creddef
+│           │               │   │   │   └── CredDefManager.java
+│           │               │   │   ├── credential
+│           │               │   │   │   ├── CredentialInfoResolver.java
+│           │               │   │   │   ├── CredentialManagerBase.java
+│           │               │   │   │   ├── HolderIndyManager.java
+│           │               │   │   │   ├── HolderLDManager.java
+│           │               │   │   │   ├── HolderManager.java
+│           │               │   │   │   ├── IssuerIndyManager.java
+│           │               │   │   │   ├── IssuerLDManager.java
+│           │               │   │   │   └── IssuerManager.java
+│           │               │   │   ├── jsonld
+│           │               │   │   │   ├── LDContextHelper.java
+│           │               │   │   │   ├── LDContextResolver.java
+│           │               │   │   │   ├── LDConverter.java
+│           │               │   │   │   ├── LDEventHandler.java
+│           │               │   │   │   ├── SchemaContextResolver.java
+│           │               │   │   │   ├── SignVerifyLD.java
+│           │               │   │   │   └── VPManager.java
+│           │               │   │   ├── proof
+│           │               │   │   │   ├── BaseLDManager.java
+│           │               │   │   │   ├── ProofEventHandler.java
+│           │               │   │   │   ├── ProofManager.java
+│           │               │   │   │   ├── ProverLDManager.java
+│           │               │   │   │   ├── VerifierLDManager.java
+│           │               │   │   │   └── VersionHelper.java
+│           │               │   │   ├── prooftemplates
+│           │               │   │   │   ├── Attributes.java
+│           │               │   │   │   ├── NonRevocationApplicator.java
+│           │               │   │   │   ├── Predicate.java
+│           │               │   │   │   ├── ProofTemplateConversion.java
+│           │               │   │   │   ├── ProofTemplateElementVisitor.java
+│           │               │   │   │   ├── ProofTemplateManager.java
+│           │               │   │   │   └── RevocationTimeStampProvider.java
+│           │               │   │   ├── schema
+│           │               │   │   │   ├── RestrictionsManager.java
+│           │               │   │   │   └── SchemaService.java
+│           │               │   │   └── wallet
+│           │               │   │       └── Identity.java
+│           │               │   ├── DidDocManager.java
+│           │               │   ├── messaging
+│           │               │   │   ├── email
+│           │               │   │   │   ├── DefaultEmailService.java
+│           │               │   │   │   ├── EmailCmd.java
+│           │               │   │   │   └── EmailService.java
+│           │               │   │   ├── MessagingManager.java
+│           │               │   │   └── websocket
+│           │               │   │       ├── InMemoryMessageService.java
+│           │               │   │       ├── MessageService.java
+│           │               │   │       └── RedisMessageService.java
+│           │               │   ├── mode
+│           │               │   │   ├── indy
+│           │               │   │   │   ├── EndpointService.java
+│           │               │   │   │   ├── IndyDidDocManager.java
+│           │               │   │   │   └── IndyStartupTasks.java
+│           │               │   │   └── web
+│           │               │   │       ├── WebDidDocManager.java
+│           │               │   │       └── WebStartupTasks.java
+│           │               │   ├── MyDocumentManager.java
+│           │               │   ├── NotificationEventListener.java
+│           │               │   ├── NotificationService.java
+│           │               │   ├── oob
+│           │               │   │   ├── OOBBase.java
+│           │               │   │   ├── OOBCredentialOffer.java
+│           │               │   │   └── OOBPresentationRequest.java
+│           │               │   ├── PartnerManager.java
+│           │               │   ├── StartupTasks.java
+│           │               │   ├── StatsService.java
+│           │               │   ├── TagService.java
+│           │               │   ├── util
+│           │               │   │   ├── AriesStringUtil.java
+│           │               │   │   ├── Converter.java
+│           │               │   │   ├── CryptoUtil.java
+│           │               │   │   ├── Pair.java
+│           │               │   │   └── TimeUtil.java
+│           │               │   ├── verification
+│           │               │   │   ├── input
+│           │               │   │   │   └── SanitizedStringDeserializer.java
+│           │               │   │   ├── prooftemplates
+│           │               │   │   │   ├── DistinctAttributeNames.java
+│           │               │   │   │   ├── SameGroupType.java
+│           │               │   │   │   ├── SameSchemaType.java
+│           │               │   │   │   ├── ValidAttributeCondition.java
+│           │               │   │   │   ├── ValidAttributeGroup.java
+│           │               │   │   │   └── ValidBPASchemaId.java
+│           │               │   │   ├── ValidatorFactory.java
+│           │               │   │   └── ValidUUID.java
+│           │               │   └── WebhookService.java
+│           │               └── persistence
+"
+
+{{app_dir_three_of_three}}=".
+│           │                   ├── model
+│           │                   │   ├── Activity.java
+│           │                   │   ├── BPACredentialDefinition.java
+│           │                   │   ├── BPACredentialExchange.java
+│           │                   │   ├── BPAProofTemplate.java
+│           │                   │   ├── BPARestrictions.java
+│           │                   │   ├── BPASchema.java
+│           │                   │   ├── BPAState.java
+│           │                   │   ├── BPAUser.java
+│           │                   │   ├── BPAWebhook.java
+│           │                   │   ├── ChatMessage.java
+│           │                   │   ├── converter
+│           │                   │   │   ├── BasePayloadConverter.java
+│           │                   │   │   ├── CredExPayloadConverter.java
+│           │                   │   │   ├── ExchangePayload.java
+│           │                   │   │   ├── ProofPayloadConverter.java
+│           │                   │   │   └── ProofRequestPayloadConverter.java
+│           │                   │   ├── DidDocWeb.java
+│           │                   │   ├── MessageQueue.java
+│           │                   │   ├── messaging
+│           │                   │   │   ├── MessageTemplate.java
+│           │                   │   │   ├── MessageTriggerConfig.java
+│           │                   │   │   ├── MessageTrigger.java
+│           │                   │   │   ├── MessageType.java
+│           │                   │   │   └── MessageUserInfo.java
+│           │                   │   ├── MyDocument.java
+│           │                   │   ├── Partner.java
+│           │                   │   ├── PartnerProof.java
+│           │                   │   ├── prooftemplate
+│           │                   │   │   ├── BPAAttributeGroup.java
+│           │                   │   │   ├── BPAAttributeGroups.java
+│           │                   │   │   ├── BPAAttribute.java
+│           │                   │   │   ├── BPACondition.java
+│           │                   │   │   ├── BPASchemaRestrictions.java
+│           │                   │   │   └── ValueOperators.java
+│           │                   │   ├── StateChangeDecorator.java
+│           │                   │   ├── Tag.java
+│           │                   │   └── type
+│           │                   │       └── ExchangeTypeTranslator.java
+│           │                   └── repository
+│           │                       ├── ActivityRepository.java
+│           │                       ├── BPACredentialDefinitionRepository.java
+│           │                       ├── BPAProofTemplateRepository.java
+│           │                       ├── BPARestrictionsRepository.java
+│           │                       ├── BPASchemaRepository.java
+│           │                       ├── BPAStateRepository.java
+│           │                       ├── BPAUserRepository.java
+│           │                       ├── BPAWebhookRepository.java
+│           │                       ├── ChatMessageRepository.java
+│           │                       ├── DBOperations.java
+│           │                       ├── DidDocWebRepository.java
+│           │                       ├── HolderCredExRepository.java
+│           │                       ├── IssuerCredExRepository.java
+│           │                       ├── MessageQueueRepository.java
+│           │                       ├── messaging
+│           │                       │   ├── MessageTemplateRepository.java
+│           │                       │   ├── MessageTriggerConfigRepository.java
+│           │                       │   └── MessageUserInfoRepository.java
+│           │                       ├── MyDocumentRepository.java
+│           │                       ├── PartnerProofRepository.java
+│           │                       ├── PartnerRepository.java
+│           │                       └── TagRepository.java
+│           └── resources
+│               ├── 3rdPartyLicenses
+│               │   └── spotbugs-annotations-disclaimer.txt
+│               ├── application.yml
+│               ├── databasemigrations
+│               │   ├── V1.10__add-credential-definition-table.sql
+│               │   ├── V1.11__creddef-table.sql
+│               │   ├── V1.12__credential-exchange-table.sql
+│               │   ├── V1.13__presentation-exchange-table.sql
+│               │   ├── V1.14__tag-table.sql
+│               │   ├── V1.15__schema-fk-constraints.sql
+│               │   ├── V1.16__add-partner-trustping.sql
+│               │   ├── V1.17__add-activity-table.sql
+│               │   ├── V1.18__add-proof-template-table.sql
+│               │   ├── V1.19__add-credential-revocation-info.sql
+│               │   ├── V1.1__add-partner-proof-creddefid.sql
+│               │   ├── V1.20__add_chat_messages-table.sql
+│               │   ├── V1.21__partner-fk-constraints.sql
+│               │   ├── V1.22__v2_credential_exchange.sql
+│               │   ├── V1.23__exchange-versions.sql
+│               │   ├── V1.24__manual-credential-proposal.sql
+│               │   ├── V1.25__connection-states.sql
+│               │   ├── V1.26__merge-credential-tables.sql
+│               │   ├── V1.27__store-credential-offer.sql
+│               │   ├── V1.28__json-ld.sql
+│               │   ├── V1.29__credential-revoked.sql
+│               │   ├── V1.2__add-my-credential-issuer.sql
+│               │   ├── V1.30__messaging-tables.sql
+│               │   ├── V1.31__json-ld-credential.sql
+│               │   ├── V1.32__clean-proof-templates.sql
+│               │   ├── V1.33__dif-presentation-exchange.sql
+│               │   ├── V1.34__schema-expanded-type.sql
+│               │   ├── V1.3__add-bpaschema-read-only.sql
+│               │   ├── V1.4__add-partner-last-seen.sql
+│               │   ├── V1.5__add-partner-supported-credentials.sql
+│               │   ├── V1.6__add-webhooks-table.sql
+│               │   ├── V1.7__add-message-queue-table.sql
+│               │   ├── V1.8__add-default-attr-name.sql
+│               │   ├── V1.9__generic-documents.sql
+│               │   └── V1__create-initial-schema.sql
+│               ├── log4j2-prod.yml
+│               ├── log4j2.yml
+│               ├── org
+│               │   └── hyperledger
+│               │       └── bpa
+│               │           └── i18n
+│               │               ├── messages_de.properties
+│               │               └── messages.properties
+│               ├── redis.yml
+│               ├── schemas.yml
+│               ├── security-keycloak.yml
+│               ├── strict-security.yml
+│               └── views
+│                   ├── bootstrap.min.css
+│                   └── signin.hbs
+├── business-partner-agent-core
+│   ├── pom.xml
+│   ├── src
+│   │   ├── main
+│   │   │   └── java
+│   │   │       └── org
+│   │   │           └── hyperledger
+│   │   │               └── bpa
+│   │   │                   └── core
+│   │   │                       ├── RegisteredWebhook.java
+│   │   │                       └── WebhookEvent.java
+│   │   └── test
+│   │       └── resources
+│   │           └── spotbugs-exclude.xml
+├── formatter.xml
+├── header.txt
+├── pom.xml
+└── README.md
+
+98 directories, 352 files
+"
+
