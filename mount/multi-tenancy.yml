@@ -1,0 +1,12 @@
+micronaut:
+  data:
+    multi-tenancy:
+      mode: SCHEMA
+  multitenancy:
+    tenantresolver:
+      cookie:
+        enabled: ${TENANCY_COOKIE_ENABLED:true}
+        cookiename: ${TENANCY_COOKIE_NAME:tenantId}
+
+tenancy:
+  jwtTenantAttribute: ${TENANCY_ATTRIBUTE_NAME}

@@ -14,9 +14,9 @@ services:
         -Dbpa.acapy.apiKey=${ACAPY_ADMIN_URL_API_KEY}
         -Dbpa.acapy.bearerToken=${TENANT_TOKEN}
         -Dmicronaut.security.enabled=${BPA_SECURITY_ENABLED}
-        -Dmicronaut.server.port=${BPA_PORT}
-        -Dmicronaut.config.files=/app/mount/application.yml,/app/mount/security-keycloak.yml,/app/mount/multi-tenancy.yml
-        -Dlogback.configurationFile=/app/mount/log4js.xml
+        -Dmicronaut.server.port=${SERVER_PORT}
+        -Dmicronaut.config.files=${BPA_CONFIG_FILES}
+        -Dlogback.configurationFile=${BPA_LOG_TYPE}
         -Dbpa.pg.url=jdbc:postgresql://${DOCKERHOST}:${POSTGRES_PORT}/${POSTGRES_DB}
         -Dbpa.pg.username=${POSTGRES_USER}
         -Dbpa.pg.password=${POSTGRES_PASSWORD}
@@ -91,7 +91,7 @@ services:
       DATABASE_SCHEMA: ${DATABASE_SCHEMA}
       # VUE_APP_LOGOUT_URL_PATH: ${VUE_APP_LOGOUT_URL_PATH}
     ports:
-      - ${BPA_PORT}:${BPA_PORT}
+      - ${SERVER_PORT}:${SERVER_PORT}
       - ${BPA_DEBUG_PORT}:${BPA_DEBUG_PORT}
     restart: always
     # command:

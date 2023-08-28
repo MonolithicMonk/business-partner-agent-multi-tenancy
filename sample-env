@@ -29,12 +29,12 @@ LEDGER_URL=http://test.bcovrin.vonx.io
 BPA_WALLET_ENCRYPTION_KEY=
 BPA_SERVICE_NAME=
 BPA_HOST=
-BPA_PORT=
+SERVER_PORT=
 BPA_DEBUG_PORT=
 BPA_WEBHOOK_KEY=
 BPA_WEBHOOK_URL=
 BPA_SCHEME=https
-BPA_CONFIG_FILES="/app/mount/application.yml,classpath:security-keycloak.yml"
+BPA_CONFIG_FILES=/app/mount/micronaut.yml,/app/mount/bpa.yml,/app/mount/data.yml,/app/mount/multi-tenancy.yml,/app/mount/security-jwt.yml
 BPA_SECURITY_ENABLED=true
 BPA_BOOTSTRAP_UN=admin
 BPA_BOOTSTRAP_PW=changeme
@@ -42,7 +42,7 @@ BPA_WEB_MODE=false
 BPA_IMPRINT_URL=https://indy-test.bosch-digital.de
 BPA_PRIVACY_POLICY_URL=https://indy-test.bosch-digital.de
 BPA_CREDDEF_REVOCATION_REGISTRY_SIZE=7500
-BPA_LOG_TYPE=log4js.xml
+BPA_LOG_TYPE=/app/mount/log4js.xml
 
 VUE_APP_LOGOUT_URL_PATH=oauth/logout
 

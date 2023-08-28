@@ -1,0 +1,98 @@
+micronaut:
+  application:
+    name: bpa
+    instance:
+      id: ${random.shortuuid}
+  server:
+    port: ${SERVER_PORT:8080}
+    cors:
+      enabled: true # permissive cors, for strict cors configuration add strict-security.yml
+    idle-timeout: 30m
+    netty:
+      event-loops:
+        default:
+          prefer-native-transport: true
+      responses:
+        file:
+          cache-seconds: 60
+  security:
+    enabled: ${BPA_SECURITY_ENABLED:true}
+    authentication: session
+    endpoints:
+      logout:
+        path: /api/logout
+        get-allowed: true
+    redirect:
+      unauthorized:
+        url: /user/signin
+      login-failure: /user/authFailed
+      logout: /user/signin
+    intercept-url-map:
+      - pattern: /health
+        http-method: GET
+        access:
+          - isAnonymous()
+      - pattern: /health/**
+        http-method: GET
+        access:
+          - isAnonymous()
+      - pattern: /views/bootstrap*
+        http-method: GET
+        access:
+          - isAnonymous()
+      - pattern: /**
+        access:
+          - isAuthenticated()
+  session:
+    max-inactive-interval: 12h
+    http:
+      cookie-same-site: strict
+      cookie-name: __HOST-SESSION
+      cookie-max-age: ${micronaut.session.max-inactive-interval}
+      cookie-secure: true
+  router:
+    # note also check the AppController
+    static-resources:
+      swagger:
+        paths: classpath:META-INF/swagger
+        mapping: /swagger/**
+      swagger-ui:
+        paths: classpath:META-INF/swagger/views/swagger-ui
+        mapping: /swagger-ui/**
+      frontend:
+        paths: classpath:public
+        mapping: /**
+      login:
+        paths: classpath:views
+        mapping: /views/**
+  caches:
+    '*':
+      maximum-size: 5000
+    ur-cache:
+      expire-after-write: 300s
+    partner-lookup-cache:
+      expire-after-write: 180s
+    did-lookup-cache:
+      expire-after-write: 3600s
+    schema-attr-cache:
+      expire-after-write: 1d
+    schema-label-cache:
+      expire-after-write: 1d
+    issuer-label-cache:
+      expire-after-write: 1d
+  executors:
+    io:
+      type: fixed
+      nThreads: 25 # rest api threads
+
+endpoints:
+  all:
+    enabled: false
+  health:
+    enabled: true
+    sensitive: false
+    details-visible: AUTHENTICATED
+
+# CHANGE
+logger:
+  config: log4js-prod.yml

@@ -1,0 +1,38 @@
+bpa:
+  docker:
+    #host where containers are running: typically localhost but might be an IP as well
+    host: localhost
+  ledger:
+    browser: ${BPA_LEDGER_BROWSER:}
+  host: ${BPA_HOST:`localhost:8080`}
+  name: ${AGENT_NAME:`Business Partner Agent`}
+  scheme: ${BPA_SCHEME:`https`}
+  web:
+    only: ${BPA_WEB_MODE:false}
+  acapy:
+    url: ${ACAPY_URL:`http://localhost:8031`}
+    apiKey: ${ACAPY_API_KEY:empty}
+    endpoint: ${ACAPY_ENDPOINT:`http://localhost:8030`}
+  did:
+    prefix: 'did:sov:'
+  pg:
+    url: jdbc:postgresql://${POSTGRESQL_HOST:`localhost`}/${bpa.pg.username}
+    username: ${POSTGRESQL_USER:`walletuser`}
+    password: ${POSTGRESQL_PASSWORD:`walletpassword`}
+    schema: ${DATABASE_SCHEMA:public}
+  bootstrap:
+    username: ${BPA_BOOTSTRAP_UN:admin}
+    password: ${BPA_BOOTSTRAP_PW:changeme}
+  imprint:
+    url: ${BPA_IMPRINT_URL:}
+  privacy:
+    policy:
+      url: ${BPA_PRIVACY_POLICY_URL:}
+  creddef:
+    revocationRegistrySize: ${BPA_CREDDEF_REVOCATION_REGISTRY_SIZE:3000}
+  title: ${BPA_TITLE:`Business Partner Agent`}
+  i18n:
+    locale: ${BPA_I18N_LOCALE:en}
+    fallbackLocale: ${BPA_I18N_FALLBACK_LOCALE:en}
+  tenancy:
+    key: ${BPA_WEBHOOK_KEY:changeme}

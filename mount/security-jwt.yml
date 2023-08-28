@@ -1,0 +1,95 @@
+micronaut:
+  security:
+    enabled: ${BPA_KEYCLOAK_SECURITY_ENABLED:true}
+    authentication: ${BPA_AUTHENTICATION_TYPE:cookie}
+    endpoints:
+      login:
+        enabled: true
+        path: /oauth/login
+      logout:
+        enabled: true
+        path: /logout
+        get-allowed: true
+    redirect:
+      enabled: true
+      unauthorized:
+        enabled: true
+        url: ${BPA_KEYCLOAK_REDIRECT_UNAUTHORIZED:/oauth/login}
+      login-failure: ${BPA_KEYCLOAK_REDIRECT_UNAUTHORIZED:/oauth/login}
+      logout: ${BPA_KEYCLOAK_LOGOUT_REDIRECT:/}
+      login-success: ${BPA_REDIRECT_URL}
+      prior-to-login: false
+    intercept-url-map:
+      - pattern: /health
+        http-method: GET
+        access:
+          - isAnonymous()
+      - pattern: /health/**
+        http-method: GET
+        access:
+          - isAnonymous()
+      - pattern: /**
+        access:
+          - isAuthenticated()
+    redirection:
+      enabled: ${SEC_REDIRECTION:true}
+    token:
+      enabled: true
+      roles-name: ${BPA_KEYCLOAK_ROLES_NAME:roles}
+      name-key: ${BPA_KEYCLOAK_NAME_KEY:preferred_username}
+      roles-separator: ${BPA_KEYCLOAK_ROLES_SEPARATOR:null}
+      jwt:
+        enabled: true
+        cookie:
+          enabled: ${BPA_KEYCLOAK_COOKIE_ENABLED}
+          cookie-domain: ${BPA_KEYCLOAK_COOKIE_DOMAIN}
+          cookie-http-only: ${BPA_KEYCLOAK_COOKIE_HTTP_ONLY}
+          cookie-secure: ${BPA_KEYCLOAK_COOKIE_SECURE}
+          cookie-max-age: ${BPA_KEYCLOAK_COOKIE_MAX_AGE}
+          cookie-same-site: ${BPA_KEYCLOAK_COOKIE_SAME_SITE}
+          cookie-name: ${BPA_KEYCLOAK_COOKIE_NAME}
+    oauth2:
+      default-provider: auth0
+      openid:
+        # The URI used to log out of an OpenID provider. Default value ("/oauth/logout").
+        # TOADD
+        logout-uri: ${BPA_KEYCLOAK_OPENID_LOGOUT_URI:/oauth/logout}
+        end-session:
+          # TOADD
+          enabled: ${BPA_KEYCLOAK_OPENID_ENDSESSION_ENABLED:true}
+          # TOADD
+          # The URI the OpenID provider should redirect to after logging out. Default value ("/logout")
+          redirect-uri: ${BPA_KEYCLOAK_ENDSESSION_REDIRECT_URI:/}
+        additional-claims:
+          # Set to true if the original access token from the 
+          # provider should be included in the Micronaut JWT. Default value (false).
+          # TOADD
+          access-token: ${BPA_KEYCLOAK_OPENID_ADDITIONAL_CLAIMS_ACCESS:true}
+          # Set to true if the original refresh token from the 
+          #   provider should be included in the Micronaut JWT. Default value (false).
+          # TOADD
+          refresh-token: ${BPA_KEYCLOAK_OPENID_ADDITIONAL_CLAIMS_REFRESH:false}
+      clients:
+        auth0:
+          client-id: ${BPA_KEYCLOAK_CLIENT_ID}
+          client-secret: ${BPA_KEYCLOAK_CLIENT_SECRET}
+          scopes: ${BPA_KEYCLOAK_SCOPES:openid}
+          grant-type: ${BPA_KEYCLOAK_GRANT_TYPE:authorization_code}
+          vcauthn:
+            pres_req_conf_id:  ${BPA_KEYCLOAK_VCAUTHN_PRES_REQ_CONF_ID}
+          openid:
+            issuer: ${BPA_KEYCLOAK_ISSUER}
+            configuration-path: ${BPA_KEYCLOAK_CONFIG_PATH:/.well-known/openid-configuration}
+            jwks-uri: ${BPA_KEYCLOAK_JWKS_URI:/.well-known/openid-configuration/jwks}
+            authorization:
+              url: ${BPA_KEYCLOAK_AUTHORIZATION_URL}
+              response-type: ${BPA_KEYCLOAK_OPENID_RESPONSE_TYPE:code}
+              response-mode: ${BPA_KEYCLOAK_OPENID_RESPONSE_MODE:query}
+            token:
+              url: ${BPA_KEYCLOAK_TOKEN_URL}
+              auth-method: ${BPA_KEYCLOAK_AUTH_METHOD:client_secret_basic}  
+            end-session:
+              enabled: true
+              url: ${BPA_KEYCLOAK_ENDSESSION_URL}
+            user-info:
+              url: ${BPA_KEYCLOAK_USER_INFO}

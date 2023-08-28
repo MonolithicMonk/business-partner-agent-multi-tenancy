@@ -1,0 +1,29 @@
+datasources:
+  '*':
+    url: ${bpa.pg.url}
+    driver-class-name: org.postgresql.Driver
+    username: ${bpa.pg.username}
+    password: ${bpa.pg.password}
+    dialect: POSTGRES
+    # schema: ${bpa.pg.schema}
+    initialization-fail-timeout: -1 # wait forever until the db is ready
+
+flyway:
+  enabled: true
+  datasources:
+    default:
+      enabled: false
+      locations: classpath:databasemigrations
+
+jackson:
+  serialization-inclusion: NON_ABSENT # Omit null and Optional.empty(), but include empty collections
+  serialization:
+    indent-output: false
+  deserialization:
+    failOnUnknownProperties: false
+    acceptEmptyStringAsNullObject: true
+    acceptEmptyArrayAsNullObject: true
+  json-view:
+    enabled: true
+  mapper:
+    acceptCaseInsensitiveEnums: true
