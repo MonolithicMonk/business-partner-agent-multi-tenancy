@@ -115,6 +115,19 @@
             <version>2.2.3</version>
             <scope>provided</scope><!-- Prevent shipping -->
         </dependency>
+        <!-- CHANGE -->
+        <!-- https://mvnrepository.com/artifact/jakarta.transaction/jakarta.transaction-api -->
+        <dependency>
+            <groupId>jakarta.transaction</groupId>
+            <artifactId>jakarta.transaction-api</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>io.micronaut.multitenancy</groupId>
+            <artifactId>micronaut-multitenancy</artifactId>
+            <version>${micronaut.multitenancy.version}</version>
+            <!-- <scope>runtime</scope> -->
+        </dependency>
         <dependency><!-- Overwrite for jakarta-annotations-api -->
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-annotations-api</artifactId>
@@ -301,31 +314,7 @@
                 </configuration>
             </plugin>
             <!-- mvn se.ayoy.maven-plugins:ayoy-license-verifier-maven-plugin:verify -->
-            <plugin>
-                <groupId>se.ayoy.maven-plugins</groupId>
-                <artifactId>ayoy-license-verifier-maven-plugin</artifactId>
-                <version>1.2.0</version>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>verify</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <licenseFile>${project.basedir}/licenses.xml</licenseFile>
-                    <excludedMissingLicensesFile>${project.basedir}/allowed-missing-licenses.xml</excludedMissingLicensesFile>
-                    <failOnForbidden>true</failOnForbidden>
-                    <failOnMissing>true</failOnMissing>
-                    <failOnUnknown>true</failOnUnknown>
-                    <excludedScopes>
-                        <!-- Ignore all scopes that do not distribute artifacts -->
-                        <scope>test</scope>
-                        <scope>provided</scope>
-                    </excludedScopes>
-                </configuration>
-            </plugin>
+            <!-- CHANGE -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>

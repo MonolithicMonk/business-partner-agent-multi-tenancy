@@ -53,13 +53,17 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <skip.docker.build>true</skip.docker.build>
         <!-- Dependency Versions -->
-        <jackson.version>2.14.1</jackson.version>
-        <jackson.databind.version>2.14.1</jackson.databind.version>
+        <!-- CHANGE -->
+        <jackson.version>2.15.2</jackson.version>
+        <!-- CHANGE -->
+        <jackson.databind.version>2.15.2</jackson.databind.version>
         <log4j2.version>2.19.0</log4j2.version>
         <lombok.version>1.18.24</lombok.version>
         <lombok.maven.plugin.version>1.18.20.1</lombok.maven.plugin.version>
-        <micronaut.version>3.7.4</micronaut.version>
-        <micronaut.data.version>3.8.1</micronaut.data.version>
+        <!-- CHANGE -->
+        <micronaut.version>3.9.4</micronaut.version>
+        <micronaut.data.version>3.9.7</micronaut.data.version>
+        <micronaut.multitenancy.version>4.0.0</micronaut.multitenancy.version>
         <micronaut.openapi.version>4.7.1</micronaut.openapi.version>
         <micronaut.security.version>3.8.3</micronaut.security.version>
         <mockito.version>4.9.0</mockito.version>
@@ -115,7 +119,13 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-
+            <!-- CHANGE -->
+            <dependency>
+                <groupId>io.micronaut.multitenancy</groupId>
+                <artifactId>micronaut-multitenancy</artifactId>
+                <version>${micronaut.multitenancy.version}</version>
+                <!-- <scope>runtime</scope> -->
+            </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
