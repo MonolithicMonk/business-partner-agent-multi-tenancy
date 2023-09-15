@@ -11,43 +11,42 @@ import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
 import org.hyperledger.bpa.tenancy.security.roles.RolesandPermissions;
 import org.hyperledger.bpa.constants.TenancyConstants;
-import org.hyperledger.bpa.tenancy.controller.TenancyController;
+import org.hyperledger.bpa.tenancy.controller.AriesWebhookController;
 
 import org.apache.commons.lang3.StringUtils;
-import java.util.List;
 import jakarta.inject.Inject;
+import java.util.List;
 
 @Slf4j
 @Singleton
 @Requires(property = "tenancy.apiKey")
-public class TenancyAuthFetcher implements AuthenticationFetcher {
+public class AriesWebhookAuthFetcher implements AuthenticationFetcher {
 
-    @Value("${tenancy.apiKey}")
-    String apiKey;
-
-    String tenantPath = TenancyController.TENANCY_CONTROLLER_PATH;
+  
+  @Value("${tenancy.apiKey}")
+  String apiKey;
+  
+  @Inject
+  TenancyConstants tenancyConstants;
+  
+  @Override
+  public Publisher<Authentication> fetchAuthentication(io.micronaut.http.HttpRequest<?> request) {
     
-    @Inject
-    TenancyConstants tenancyConstants;
-
-    @Override
-    public Publisher<Authentication> fetchAuthentication(io.micronaut.http.HttpRequest<?> request) {
-
         String X_API_KEY = tenancyConstants.ACAPY_ADMIN_API_KEY_HEADER_NAME;
-        
+
         return Maybe.<Authentication>create(emitter -> {
             if (HttpMethod.POST.equals(request.getMethod())
-                    && request.getPath().startsWith(tenantPath)) {
+                    && request.getPath().startsWith(AriesWebhookController.WEBHOOK_CONTROLLER_PATH)) {
                 String apiKeyHeader = request.getHeaders().get(X_API_KEY);
-                log.debug("Handling tenancy-admin tenancy authentication");
+                log.debug("Handling acapy events webhook authentication");
 
                 if (StringUtils.isNotBlank(apiKey) && apiKeyHeader.equals(apiKey)) {
                     emitter.onSuccess(tenancyAuthentication());
-                    log.debug("tenancy-admin tenancy authentication success");
+                    log.debug("acapy events webhook authentication success");
                     return;
                 }
 
-                log.error("tenancy-admin tenancy authentication failed. " +
+                log.error("acapy events webhook authentication failed. " +
                         "Configured tenancy.apiKey: {}, received x-api-key header: {}", apiKey, apiKeyHeader);
                 emitter.onError(new IllegalArgumentException("Invalid API key"));
             } else {
@@ -57,6 +56,6 @@ public class TenancyAuthFetcher implements AuthenticationFetcher {
     }
 
     static Authentication tenancyAuthentication() {
-        return Authentication.build("tenancy-admin", List.of(RolesandPermissions.ROLE_TENANT_ADMIN));
+        return Authentication.build("acapy-webhooks", List.of(RolesandPermissions.ROLE_TENANT_ADMIN));
     }
 }

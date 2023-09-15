@@ -57,7 +57,7 @@ public class TenancyController {
           tenantMigrationService.migrateTenant(tenantId);
           log.debug("Migration completed for tenant: {}", tenantId);
 
-          acapyTenantConfigOperations.createAcapyTenantConfig(request.getWalletId(), request.getBearerToken());
+          acapyTenantConfigOperations.createAcapyTenantConfig(request.getWalletId(), tenantId, request.getBearerToken());
           log.debug("Acapy tenant configuration created for tenant: {}", tenantId);
 
           log.info("Migration successful for tenant: {}", tenantId);

@@ -10,6 +10,8 @@ public class TenantRuntime {
     private String jwtTenantAttribute;
     private String apiKey;
     private String defaultTenant;
+    private String walletIdHeaderName;
+    private String acapyAdminApiKeyHeaderName;
 
     public String getJwtTenantAttribute() {
         return jwtTenantAttribute;
@@ -33,6 +35,22 @@ public class TenantRuntime {
 
     public void setDefaultTenant(String defaultTenant) {
         this.defaultTenant = defaultTenant;
+    }
+
+    public String getWalletIdHeaderName() {
+        return walletIdHeaderName;
+    }
+
+    public void setWalletIdHeaderName(String walletIdHeaderName) {
+        this.walletIdHeaderName = walletIdHeaderName;
+    }
+
+    public String getAcapyAdminApiKeyHeaderName() {
+        return acapyAdminApiKeyHeaderName;
+    }
+
+    public void setAcapyAdminApiKeyHeaderName(String acapyAdminApiKeyHeaderName) {
+        this.acapyAdminApiKeyHeaderName = acapyAdminApiKeyHeaderName;
     }
 
 }

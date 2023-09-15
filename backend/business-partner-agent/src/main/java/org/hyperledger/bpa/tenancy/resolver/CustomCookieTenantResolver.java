@@ -15,10 +15,11 @@
  */
 package org.hyperledger.bpa.tenancy.resolver;
 
+import io.micronaut.context.annotation.Replaces;
 import io.micronaut.core.annotation.NonNull;
 import io.micronaut.context.annotation.Requires;
-import io.micronaut.context.event.ApplicationEventPublisher;
 import io.micronaut.core.util.StringUtils;
+import io.micronaut.http.HttpMethod;
 import io.micronaut.http.HttpRequest;
 import io.micronaut.multitenancy.exceptions.TenantNotFoundException;
 import io.micronaut.multitenancy.tenantresolver.CookieTenantResolverConfiguration;
@@ -26,91 +27,111 @@ import io.micronaut.multitenancy.tenantresolver.CookieTenantResolverConfiguratio
 import io.micronaut.multitenancy.tenantresolver.TenantResolver;
 import io.micronaut.multitenancy.tenantresolver.CookieTenantResolver;
 
-import org.hyperledger.bpa.tenancy.events.TenantResolved;
+import org.hyperledger.bpa.tenancy.acapy.persistence.AcapyTenantConfigOperations;
+import org.hyperledger.bpa.tenancy.controller.AriesWebhookController;
 import org.hyperledger.bpa.constants.TenancyConstants;
 
 import jakarta.inject.Singleton;
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.Serializable;
-import io.micronaut.context.annotation.Replaces;
 import jakarta.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
+import java.io.Serializable;
+import java.util.Optional;
 
 /**
- * A custom {@link TenantResolver} that resolves the tenant from a request cookie.
- * This resolver extends the default CookieTenantResolver to introduce custom behavior.
- * 
- * <p>
- * When a tenant is resolved, a TenantResolved event is emitted to notify other parts of the
- * application about the resolved tenant. This allows for dynamic configuration or behavior
- * based on the tenant context.
- * </p>
- * 
- * <p>
- * If the tenant cannot be resolved from the cookie, a default tenant ("internaloperations") 
- * is used, and the TenantResolved event is emitted with this default tenant.
- * </p>
- * 
- * @author Sergio del Amo
+ * A {@link TenantResolver} that resolves the tenant from a request cookie.
+ *
+ * @author Yuki I
  * @since 1.0.0
- * @modified Yuki I - Returns a default Tenant when resolution fails.
- * @modified Yuki I - Added event emission on tenant resolution.
  */
 
 @Slf4j
 @Singleton
 @Replaces(CookieTenantResolver.class)
 @Requires(beans = CookieTenantResolverConfiguration.class)
-@Requires(property = CookieTenantResolverConfigurationProperties.PREFIX + ".enabled", value = StringUtils.TRUE,
-        defaultValue = StringUtils.FALSE)
+@Requires(property = CookieTenantResolverConfigurationProperties.PREFIX
+    + ".enabled", value = StringUtils.TRUE, defaultValue = StringUtils.FALSE)
 public class CustomCookieTenantResolver extends CookieTenantResolver {
-  
-    @Inject
-    ApplicationEventPublisher<TenantResolved> tenantResolvedEventPublisher;
-    
-    @Inject
-    TenancyConstants tenancyConstants;
-  
-    public CustomCookieTenantResolver(CookieTenantResolverConfiguration configuration) {
-        super(configuration);
-    }
 
-    @Override
-    @NonNull
-    public Serializable resolveTenantIdentifier() {
-        try {
-            Serializable tenantId = super.resolveTenantIdentifier();
-            log.debug("Tenant resolved: {}", tenantId);
-            emitTenantResolvedEvent(tenantId.toString());
-            return tenantId;
-        } catch (TenantNotFoundException e) {
-            log.debug("Tenant not found, using default: {}", tenancyConstants.DEFAULT_TENANT);
-            emitTenantResolvedEvent(tenancyConstants.DEFAULT_TENANT);
-            return tenancyConstants.DEFAULT_TENANT;
+  @Inject
+  TenancyConstants tenancyConstants;
+
+  private final AcapyTenantConfigOperations tenantConfigOps;
+
+  public CustomCookieTenantResolver(CookieTenantResolverConfiguration configuration,
+      AcapyTenantConfigOperations tenantConfigOps) {
+    super(configuration);
+    this.tenantConfigOps = tenantConfigOps;
+  }
+
+  @Override
+  @NonNull
+  public Serializable resolveTenantIdentifier() {
+    try {
+      Serializable tenantId = super.resolveTenantIdentifier();
+      log.debug("Non HTTP Request tenant resolved: {}", tenantId.toString());
+      return tenantId;
+    } catch (TenantNotFoundException e) {
+      log.debug("Non HTTP Request tenant not found, using default: {}", tenancyConstants.DEFAULT_TENANT);
+      return tenancyConstants.DEFAULT_TENANT;
+    }
+  }
+
+  /**
+   * Resolves the tenant identifier from an HTTP request.
+   * 
+   * The method first attempts to resolve the tenant ID from db using the
+   * 'x-wallet-id' header
+   * if the request meets certain predefined conditions. If this attempt fails or
+   * the conditions are not met, it falls back to the super class method to
+   * resolve
+   * the tenant ID.
+   * 
+   * @param request The current HTTP request
+   * @return The resolved tenant identifier. Returns the DEFAULT_TENANT if no
+   *         tenant
+   *         could be resolved.
+   * @throws TenantNotFoundException If the tenant could not be resolved.
+   */
+  @Override
+  @NonNull
+  public Serializable resolveTenantIdentifier(@NonNull HttpRequest<?> request) {
+    try {
+      Serializable tenantId = super.resolveTenantIdentifier(request);
+      String ipAddress = request.getRemoteAddress().getAddress().toString();
+
+      log.debug(
+          "Request Headers: {}, IP: {}, Method: {}, URI: {}",
+          request.getHeaders().asMap(), ipAddress,
+          request.getMethod(), request.getUri());
+
+      // Check if the request is a POST request and starts with the specified path
+      // Since the only request that will contain the x-wallet-id is the request from
+      // the acapy via events webhooks
+      if (HttpMethod.POST.equals(request.getMethod())
+          && request.getPath().startsWith(AriesWebhookController.WEBHOOK_CONTROLLER_PATH)) {
+
+        // Extract the 'x-wallet-id' header from the request
+        String walletId = request.getHeaders().get(tenancyConstants.WALLET_ID_HEADER_NAME);
+
+        // If the 'x-wallet-id' is present, attempt to resolve the tenantId from db
+        // using it
+        if (walletId != null && !walletId.isEmpty()) {
+          Optional<String> tenantIdInDb = tenantConfigOps.findTenantIdByWalletId(walletId);
+
+          // If tenantId is successfully resolved using the 'x-wallet-id', return it
+          // immediately
+          if (tenantIdInDb.isPresent()) {
+            log.debug("Tenant - {}, resolved using {} header", tenantIdInDb.get(), tenancyConstants.WALLET_ID_HEADER_NAME);
+            return tenantIdInDb.get();
+          }
         }
-    }
+      }
 
-    @Override
-    @NonNull
-    public Serializable resolveTenantIdentifier(@NonNull HttpRequest<?> request) {
-        try {
-            Serializable tenantId = super.resolveTenantIdentifier(request);
-            log.debug("Tenant resolved: {}", tenantId);
-            emitTenantResolvedEvent(tenantId.toString());
-            return tenantId;
-        } catch (TenantNotFoundException e) {
-            log.debug("Tenant not found, using default: {}", tenancyConstants.DEFAULT_TENANT);
-            emitTenantResolvedEvent(tenancyConstants.DEFAULT_TENANT);
-            return tenancyConstants.DEFAULT_TENANT;
-        }
+      log.debug("HTTP Request tenant resolved: {}", tenantId);
+      return tenantId;
+    } catch (TenantNotFoundException e) {
+      log.debug("HTTP Request tenant not found, using default: {}", tenancyConstants.DEFAULT_TENANT);
+      return tenancyConstants.DEFAULT_TENANT;
     }
-
-    /**
-     * Emits a TenantResolved event with the provided tenantId.
-     * 
-     * @param tenantId The resolved tenant identifier.
-     */
-    private void emitTenantResolvedEvent(String tenantId) {
-      tenantResolvedEventPublisher.publishEvent(new TenantResolved(tenantId));
-    }
+  }
 }

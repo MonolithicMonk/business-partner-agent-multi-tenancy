@@ -35,19 +35,24 @@ public class AcapyTenantConfigOperations {
     @Inject
     AcapyTenantConfigRepository acapyTenantConfigRepository;
 
-    public void createAcapyTenantConfig(String newWalletId, String newBearerToken) {
+    public void createAcapyTenantConfig(String newWalletId, String newTenantId, String newBearerToken) {
         acapyTenantConfigRepository.getByWalletId(newWalletId)
                 .ifPresentOrElse(wallet -> {
                     log.info("Wallet ID already exists");
                 },
                 () -> acapyTenantConfigRepository.save(AcapyTenantConfig.builder()
                         .walletId(newWalletId)
+                        .tenantId(newTenantId)
                         .bearerToken(newBearerToken)
                         .build()));
     }
 
     public Optional<AcapyTenantConfig> findWalletId(String walletId) {
         return acapyTenantConfigRepository.getByWalletId(walletId);
+    }
+
+    public Optional<String> findTenantIdByWalletId(String walletId) {
+      return acapyTenantConfigRepository.getTenantIdByWalletId(walletId);
     }
 
     public Optional<AcapyTenantConfig> findBearerToken(String bearerToken) {

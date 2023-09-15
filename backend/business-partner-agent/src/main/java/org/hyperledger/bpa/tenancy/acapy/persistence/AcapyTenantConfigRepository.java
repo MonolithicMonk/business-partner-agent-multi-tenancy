@@ -8,7 +8,6 @@ import io.micronaut.data.model.query.builder.sql.Dialect;
 import io.micronaut.data.repository.CrudRepository;
 import org.hyperledger.bpa.tenancy.acapy.persistence.AcapyTenantConfig;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,6 +22,9 @@ public interface AcapyTenantConfigRepository extends CrudRepository<AcapyTenantC
 
     @Query("SELECT bearer_token FROM acapy_tenant_config LIMIT 1")
     Optional<String> findByBearerToken();
+
+    @Query("SELECT tenant_id FROM acapy_tenant_config WHERE wallet_id = :walletId")
+    Optional<String> getTenantIdByWalletId(String walletId);
 
     Optional<AcapyTenantConfig> getByWalletId(String walletId);
 
