@@ -11,3 +11,4 @@ micronaut:
 tenancy:
   jwtTenantAttribute: ${TENANCY_ATTRIBUTE_NAME}
   apiKey: ${BPA_WEBHOOK_KEY:changeme}
+  defaultTenant: ${DEFAULT_TENANT:internaloperations}

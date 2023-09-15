@@ -25,7 +25,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hyperledger.aries.AriesClient;
-import org.hyperledger.bpa.impl.StartupTasks;
+import org.hyperledger.bpa.tenancy.impl.StartupTasks;
 
 import java.io.IOException;
 

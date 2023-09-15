@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.hyperledger.aries.AriesClient;
 import org.hyperledger.aries.api.server.StatusConfig;
-import org.hyperledger.bpa.impl.StartupTasks;
+import org.hyperledger.bpa.tenancy.impl.StartupTasks;
 import org.hyperledger.bpa.impl.activity.DidResolver;
 import org.hyperledger.bpa.persistence.model.messaging.MessageTrigger;
 
